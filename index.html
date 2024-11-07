@@ -11,8 +11,8 @@
     <button onclick="convertPdfToText()">Convert</button>
     <pre id="output"></pre>
 
-    <!-- Include pdf-lib.js from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1"></script>
+    <!-- Include pdf.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
     <script>
         async function convertPdfToText() {
             const fileInput = document.getElementById('pdfUpload');
@@ -23,22 +23,25 @@
                 return;
             }
 
-            // Read the file as an ArrayBuffer
-            const arrayBuffer = await fileInput.files[0].arrayBuffer();
-            
-            // Load the PDF document with pdf-lib
-            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-            let textContent = '';
+            const file = fileInput.files[0];
+            const arrayBuffer = await file.arrayBuffer();
 
-            // Extract text from each page
-            for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-                const page = pdfDoc.getPage(i);
-                const text = await page.getTextContent();
-                textContent += text.items.map(item => item.str).join(' ') + '\n';
-            }
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            loadingTask.promise.then(async (pdf) => {
+                let textContent = '';
 
-            // Display the text in the output <pre> element
-            output.textContent = textContent;
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const text = await page.getTextContent();
+                    const pageText = text.items.map(item => item.str).join(' ');
+                    textContent += pageText + '\n';
+                }
+
+                output.textContent = textContent;
+            }).catch((error) => {
+                console.error('Error extracting text from PDF:', error);
+                output.textContent = 'Error extracting text from PDF. Please try another file.';
+            });
         }
     </script>
 </body>
