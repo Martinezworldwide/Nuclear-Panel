@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to TXT Converter</title>
+</head>
+<body>
+    <h1>PDF to TXT Converter</h1>
+    <input type="file" id="pdfUpload" accept="application/pdf">
+    <button onclick="convertPdfToText()">Convert</button>
+    <pre id="output"></pre>
+
+    <!-- Include pdf-lib.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1"></script>
+    <script>
+        async function convertPdfToText() {
+            const fileInput = document.getElementById('pdfUpload');
+            const output = document.getElementById('output');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a PDF file.');
+                return;
+            }
+
+            // Read the file as an ArrayBuffer
+            const arrayBuffer = await fileInput.files[0].arrayBuffer();
+            
+            // Load the PDF document with pdf-lib
+            const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+            let textContent = '';
+
+            // Extract text from each page
+            for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+                const page = pdfDoc.getPage(i);
+                const text = await page.getTextContent();
+                textContent += text.items.map(item => item.str).join(' ') + '\n';
+            }
+
+            // Display the text in the output <pre> element
+            output.textContent = textContent;
+        }
+    </script>
+</body>
+</html>
